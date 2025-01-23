@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/auth/useAuth';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon as EyeOffIcon } from '@heroicons/react/24/solid';
 import { toast } from 'react-hot-toast';
 import { FcGoogle } from 'react-icons/fc';
 
@@ -76,11 +76,11 @@ const Login = () => {
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
                 {showPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                  <EyeOffIcon className="h-5 w-5 text-gray-400" />
                 ) : (
                   <EyeIcon className="h-5 w-5 text-gray-400" />
                 )}

@@ -10,6 +10,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Profile from './pages/ProfilePage';
 import SavedJobs from './pages/SavedJobsPage';
+import ChatPage from './pages/ChatPage';
+import MessageButton from './components/MessageButton';
 
 function App() {
   return (
@@ -17,33 +19,42 @@ function App() {
       <AuthProvider>
         <SearchProvider>
           <JobProvider>
-            <div className="min-h-screen bg-gray-50 flex flex-col">
+            <div className="min-h-screen bg-gray-50">
               <Navigation />
-              <main className="flex-grow">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
-                  <Route 
-                    path="/profile" 
+                  <Route
+                    path="/profile"
                     element={
                       <ProtectedRoute>
                         <Profile />
                       </ProtectedRoute>
-                    } 
+                    }
                   />
-                  <Route 
-                    path="/saved-jobs" 
+                  <Route
+                    path="/saved-jobs"
                     element={
                       <ProtectedRoute>
                         <SavedJobs />
                       </ProtectedRoute>
-                    } 
+                    }
+                  />
+                  <Route
+                    path="/messages"
+                    element={
+                      <ProtectedRoute>
+                        <ChatPage />
+                      </ProtectedRoute>
+                    }
                   />
                 </Routes>
-              </main>
+              </div>
+              <MessageButton />
+              <Toaster position="top-right" />
             </div>
-            <Toaster position="top-right" />
           </JobProvider>
         </SearchProvider>
       </AuthProvider>

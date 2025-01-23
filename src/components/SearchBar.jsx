@@ -1,149 +1,184 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearch } from '../contexts/search/useSearch';
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon as SearchIcon, AdjustmentsHorizontalIcon as AdjustmentsIcon } from '@heroicons/react/24/solid';
+import { toast } from 'react-hot-toast';
 
 export default function SearchBar() {
-  const { searchJobs, filters, loadCategories } = useSearch();
+  const { searchJobs } = useSearch();
   const [showFilters, setShowFilters] = useState(false);
-  const [localFilters, setLocalFilters] = useState(filters);
+  const [searchParams, setSearchParams] = useState({
+    what: '',
+    where: '',
+    salary_min: '',
+    salary_max: '',
+    full_time: false,
+    permanent: false,
+    sort_by: 'relevance'
+  });
 
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
-
-  const handleSearch = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    searchJobs(localFilters);
+    
+    // Validate search parameters
+    if (!searchParams.what && !searchParams.where) {
+      toast.error('Please enter a job title, keyword, or location');
+      return;
+    }
+
+    // Clean up parameters before sending
+    const cleanParams = Object.entries(searchParams).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== false) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
+    try {
+      await searchJobs(cleanParams);
+    } catch (err) {
+      toast.error(`Failed to search jobs: ${err.message}`);
+    }
   };
 
-  const handleFilterChange = (e) => {
+  const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setLocalFilters(prev => ({
+    setSearchParams(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <form onSubmit={handleSearch} className="space-y-4">
-        <div className="flex gap-4">
-          <div className="flex-1">
+    <form onSubmit={handleSubmit} className="relative z-10">
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="relative rounded-lg shadow-sm">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <SearchIcon className="h-5 w-5 text-gray-400" />
+            </div>
             <input
               type="text"
               name="what"
-              value={localFilters.what}
-              onChange={handleFilterChange}
+              value={searchParams.what}
+              onChange={handleChange}
+              className="block w-full pl-10 pr-3 py-3 text-base border-0 rounded-lg focus:ring-2 focus:ring-blue-500"
               placeholder="Job title, keywords, or company"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          <div className="flex-1">
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="relative rounded-lg shadow-sm">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
             <input
               type="text"
               name="where"
-              value={localFilters.where}
-              onChange={handleFilterChange}
+              value={searchParams.where}
+              onChange={handleChange}
+              className="block w-full pl-10 pr-3 py-3 text-base border-0 rounded-lg focus:ring-2 focus:ring-blue-500"
               placeholder="City or postcode"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+        </div>
+
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="inline-flex items-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-600" />
+            <AdjustmentsIcon className="h-5 w-5" />
           </button>
+
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <MagnifyingGlassIcon className="h-5 w-5" />
-            Search
+            Search Jobs
           </button>
         </div>
+      </div>
 
-        {showFilters && (
-          <div className="bg-white p-4 rounded-lg shadow space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {showFilters && (
+        <div className="absolute mt-4 w-full bg-white rounded-lg shadow-lg p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Salary Range
+            </label>
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Salary Range</label>
-                <div className="mt-1 flex gap-2">
-                  <input
-                    type="number"
-                    name="salary_min"
-                    value={localFilters.salary_min}
-                    onChange={handleFilterChange}
-                    placeholder="Min"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <input
-                    type="number"
-                    name="salary_max"
-                    value={localFilters.salary_max}
-                    onChange={handleFilterChange}
-                    placeholder="Max"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
+                <input
+                  type="number"
+                  name="salary_min"
+                  value={searchParams.salary_min}
+                  onChange={handleChange}
+                  placeholder="Min"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700">Job Type</label>
-                <div className="mt-2 space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="full_time"
-                      checked={localFilters.full_time}
-                      onChange={handleFilterChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm text-gray-600">Full Time</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="permanent"
-                      checked={localFilters.permanent}
-                      onChange={handleFilterChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm text-gray-600">Permanent</span>
-                  </label>
-                </div>
+                <input
+                  type="number"
+                  name="salary_max"
+                  value={searchParams.salary_max}
+                  onChange={handleChange}
+                  placeholder="Max"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Sort By</label>
-                <select
-                  name="sort_by"
-                  value={localFilters.sort_by}
-                  onChange={handleFilterChange}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                >
-                  <option value="relevance">Relevance</option>
-                  <option value="date">Date</option>
-                  <option value="salary">Salary</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Exclude Keywords</label>
-              <input
-                type="text"
-                name="what_exclude"
-                value={localFilters.what_exclude}
-                onChange={handleFilterChange}
-                placeholder="Keywords to exclude"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
             </div>
           </div>
-        )}
-      </form>
-    </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Job Type
+            </label>
+            <div className="space-y-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  name="full_time"
+                  checked={searchParams.full_time}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">Full Time</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  name="permanent"
+                  checked={searchParams.permanent}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">Permanent</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sort By
+            </label>
+            <select
+              name="sort_by"
+              value={searchParams.sort_by}
+              onChange={handleChange}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="relevance">Relevance</option>
+              <option value="date">Date</option>
+              <option value="salary">Salary</option>
+            </select>
+          </div>
+        </div>
+      )}
+    </form>
   );
 } 

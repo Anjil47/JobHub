@@ -9,13 +9,18 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '../../config/firebaseConfig';
 import { AuthContext } from './context';
+import { storeUserData } from '../../utils/chatUtils';
 
 export default function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Store user data in Realtime Database when they sign in
+        await storeUserData(user);
+      }
       setCurrentUser(user);
       setLoading(false);
     });
@@ -31,7 +36,10 @@ export default function AuthProvider({ children }) {
   };
 
   const signInWithGoogle = async () => {
-    return signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    // Store user data after Google sign-in
+    await storeUserData(result.user);
+    return result;
   };
 
   const logout = () => {
